@@ -8,7 +8,7 @@ let Characteristic;
 let logger;
 let requestOptions = {
 	method: 'POST',
-	uri: API_URL + url,
+	url: API_URL,
 	headers: {
 		'Accept-Language': 'ko-kr',
 		'User-Agent': '%EC%98%AC%EB%A0%88%20tv%play/3.0.2 CFNetwork/808.2.16 Darwin/16.3.0'
@@ -28,7 +28,9 @@ module.exports = function (homebridge) {
 	homebridge.registerAccessory('homebridge-ollehtv', 'OllehTV', OllehTV);
 }
 
-function sender(url, params) {
+function sender(uri, params) {
+	requestOptions.url = (API_URL + uri);
+	
 	if (params) {
 		Object.assign(requestOptions.body, params);
 	}
