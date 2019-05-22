@@ -1,6 +1,6 @@
 [![npm version](https://badge.fury.io/js/homebridge-ollehtv.svg)](https://badge.fury.io/js/homebridge-ollehtv)
 
-# homebridge-raspberrypi-remote
+# homebridge-ollehtv
 
 This is Olleh TV plugin for [Homebridge](https://github.com/nfarina/homebridge). 
 
