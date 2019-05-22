@@ -41,8 +41,8 @@ function OllehTV(log, config) {
 
 	this.services = [];
 	this.name = config.name || 'Olleh TV';
-	requestOptions.body.DEVICE_ID = config.token;
-	requestOptions.body.SVC_PW = config.password;
+	requestOptions.body.DEVICE_ID = config.id;
+	requestOptions.body.SVC_PW = config.token;
 	this.operatingState = false;
 
 	// olleh tv remote controller buttons
@@ -85,11 +85,11 @@ function OllehTV(log, config) {
 	};
 
 	if (!requestOptions.body.DEVICE_ID) {
-		throw new Error('Your must provide token of the Olleh TV.');
+		throw new Error('Your must provide id of the Olleh TV.');
 	}
 
 	if (!requestOptions.body.SVC_PW) {
-		throw new Error('Your must provide password of the Olleh TV.');
+		throw new Error('Your must provide token of the Olleh TV.');
 	}
 
 	this.service = new Service.Television(this.name);
