@@ -41,6 +41,7 @@ function OllehTV(log, config) {
 
 	this.services = [];
 	this.name = config.name || 'Olleh TV';
+	this.interval = config.interval || 5000;
 	requestOptions.body.DEVICE_ID = config.id;
 	requestOptions.body.SVC_PW = config.token;
 	this.operatingState = false;
@@ -84,6 +85,12 @@ function OllehTV(log, config) {
 		MUTE: 449
 	};
 
+	this.stateGroup = {
+		OFF: 0,
+		STANDBY: 1,
+		ON: 2
+	};
+
 	if (!requestOptions.body.DEVICE_ID) {
 		throw new Error('Your must provide id of the Olleh TV.');
 	}
@@ -116,10 +123,38 @@ function OllehTV(log, config) {
 
 OllehTV.prototype = {
 	discover: function () {
+		const that = this;
 
+		setInterval(function () {
+			that.updateState.bind(this);
+		}, that.interval);
 	},
 
 	getPowerState: function (callback) {
+		callback(null, this.operatingState);
+	},
+
+	setPowerState: function (state, callback) {
+		const that = this;
+
+		sender('/rmt/inputButton', {
+			KEY_CD: that.buttonGroup.POWER
+		}).then(result => {
+			if (result && result.STATUS) {
+				if (result.STATUS && result.STATUS.CODE == 0) {
+					callback();
+				} else {
+					callback(new Error(result.STATUS.MESSAGE));
+				}
+			} else {
+				callback(new Error(result.STATUS.MESSAGE));
+			}
+		}).catch(error => {
+			callback(new Error('Communication with Olleh TV failed.'));
+		});
+	},
+
+	updateState: function () {
 		const that = this;
 
 		sender('/rmt/getCurrentState').then(result => {
@@ -134,34 +169,16 @@ OllehTV.prototype = {
 					* FIN_TM: end time
 					* STB_STATE: state(0: OFF, 1: STANDBY, 2: ON)
 					*/
+
+					that.operatingState = (result.STATUS.DATA.STB_STATE != that.stateGroup.OFF);
+
 					that.service
 						.getCharacteristic(Characteristic.ActiveIdentifier)
 						.updateValue(result.STATUS.DATA.PRGM_ID);
+
 					that.service
 						.getCharacteristic(Characteristic.ConfiguredName)
 						.updateValue(result.STATUS.DATA.PRGM_NM);
-
-					callback(result.STATUS.DATA.STB_STATE);
-				} else {
-					callback(new Error(result.STATUS.MESSAGE));
-				}
-			} else {
-				callback(new Error(result.STATUS.MESSAGE));
-			}
-		}).catch(error => {
-			callback(new Error('Communication with Olleh TV failed.'));
-		});
-	},
-
-	setPowerState: function (state, callback) {
-		const that = this;
-
-		sender('/rmt/inputButton', {
-			KEY_CD: that.buttonGroup.POWER
-		}).then(result => {
-			if (result && result.STATUS) {
-				if (result.STATUS && result.STATUS.CODE == 0) {
-					callback();
 				} else {
 					callback(new Error(result.STATUS.MESSAGE));
 				}

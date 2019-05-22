@@ -30,7 +30,8 @@ This is Olleh TV plugin for [Homebridge](https://github.com/nfarina/homebridge).
           "accessory": "OllehTV",
           "name": "Olleh TV",
           "id": "ID_FROM_STEP_2",
-          "token": "TOKEN_FROM_STEP_2"
+          "token": "TOKEN_FROM_STEP_2",
+          "interval": 5000
         }
       ]
     ```
