@@ -6,6 +6,20 @@ const API_URL = 'https://ollehtvplay.ktipmedia.co.kr/otp/v1';
 let Service;
 let Characteristic;
 let logger;
+let requestOptions = {
+	method: 'POST',
+	uri: API_URL + url,
+	headers: {
+		'Accept-Language': 'ko-kr',
+		'User-Agent': '%EC%98%AC%EB%A0%88%20tv%play/3.0.2 CFNetwork/808.2.16 Darwin/16.3.0'
+	},
+	json: true,
+	body: {
+		DEVICE_ID: undefined,
+		SVC_ID: 'OTP',
+		SVC_PW: undefined
+	}
+};
 
 module.exports = function (homebridge) {
 	Service = homebridge.hap.Service;
@@ -15,24 +29,11 @@ module.exports = function (homebridge) {
 }
 
 function sender(url, params) {
-	let options = {
-		method: 'POST',
-		uri: API_URL + url,
-		headers: {
-			'Accept-Language': 'ko-kr',
-			'User-Agent': '%EC%98%AC%EB%A0%88%20tv%play/3.0.2 CFNetwork/808.2.16 Darwin/16.3.0'
-		}
-	};
-
-	if (options.method == 'POST' || options.method == 'PUT') {
-		options.body = params;
-		options.json = true;
-	} else if (options.method == 'GET' || options.method == 'DELETE') {
-		options.qs = params;
-		options.json = false;
+	if (params) {
+		Object.assign(requestOptions.body, params);
 	}
 
-	return request(options);
+	return request(requestOptions);
 }
 
 function OllehTV(log, config) {
@@ -40,10 +41,55 @@ function OllehTV(log, config) {
 
 	this.services = [];
 	this.name = config.name || 'Olleh TV';
-	this.token = config.token;
+	requestOptions.body.DEVICE_ID = config.token;
+	requestOptions.body.SVC_PW = config.password;
+	this.operatingState = false;
 
-	if (!this.token) {
+	// olleh tv remote controller buttons
+	this.buttonGroup = {
+		JIUGI: 8,
+		HWAGIN: 10,
+		NAGAGI: 27,
+		HOME: 36,
+		LEFT: 37,
+		UP: 38,
+		RIGHT: 39,
+		DOWN: 40,
+		ZERO: 48,
+		ONE: 49,
+		TWO: 50,
+		THREE: 51,
+		FOUR: 52,
+		FIVE: 53,
+		SIX: 54,
+		SEVEN: 55,
+		EIGHT: 56,
+		NINE: 57,
+		STAR: 112,
+		POUND: 113,
+		IJEON: 115,
+		RED: 403,
+		GREEN: 404,
+		YELLOW: 405,
+		BLUE: 406,
+		POWER: 409,
+		REWIND: 412,
+		STOP: 413,
+		PLAY_PAUSE: 415,
+		FAST_FORWARD: 417,
+		CHANNEL_UP: 427,
+		CHANNEL_DOWN: 428,
+		VOLUME_UP: 447,
+		VOLUME_DOWN: 448,
+		MUTE: 449
+	};
+
+	if (!requestOptions.body.DEVICE_ID) {
 		throw new Error('Your must provide token of the Olleh TV.');
+	}
+
+	if (!requestOptions.body.SVC_PW) {
+		throw new Error('Your must provide password of the Olleh TV.');
 	}
 
 	this.service = new Service.Television(this.name);
@@ -52,6 +98,15 @@ function OllehTV(log, config) {
 	this.serviceInfo
 		.setCharacteristic(Characteristic.Manufacturer, 'Olleh TV')
 		.setCharacteristic(Characteristic.FirmwareRevision, version);
+
+	this.service
+		.setCharacteristic(Characteristic.ConfiguredName, this.name)
+		.setCharacteristic(Characteristic.SleepDiscoveryMode, Characteristic.SleepDiscoveryMode.ALWAYS_DISCOVERABLE);
+
+	this.service
+		.getCharacteristic(Characteristic.Active)
+        .on('get', this.getPowerState.bind(this))
+		.on('set', this.setPowerState.bind(this));
 
 	this.services.push(this.service);
 	this.services.push(this.serviceInfo);
@@ -62,6 +117,60 @@ function OllehTV(log, config) {
 OllehTV.prototype = {
 	discover: function () {
 
+	},
+
+	getPowerState: function (callback) {
+		const that = this;
+
+		sender('/rmt/getCurrentState').then(result => {
+			if (result && result.STATUS) {
+				if (result.STATUS && result.STATUS.CODE == 0 && result.STATUS.DATA) {
+					/*
+					* CHNL_NM: channel name
+					* CHNL_NO: channel number
+					* PRGM_ID: program id
+					* PRGM_NM: program name
+					* STRT_TM: start time
+					* FIN_TM: end time
+					* STB_STATE: state(0: OFF, 1: STANDBY, 2: ON)
+					*/
+					that.service
+						.getCharacteristic(Characteristic.ActiveIdentifier)
+						.updateValue(result.STATUS.DATA.PRGM_ID);
+					that.service
+						.getCharacteristic(Characteristic.ConfiguredName)
+						.updateValue(result.STATUS.DATA.PRGM_NM);
+
+					callback(result.STATUS.DATA.STB_STATE);
+				} else {
+					callback(new Error(result.STATUS.MESSAGE));
+				}
+			} else {
+				callback(new Error(result.STATUS.MESSAGE));
+			}
+		}).catch(error => {
+			callback(new Error('Communication with Olleh TV failed.'));
+		});
+	},
+
+	setPowerState: function (state, callback) {
+		const that = this;
+
+		sender('/rmt/inputButton', {
+			KEY_CD: that.buttonGroup.POWER
+		}).then(result => {
+			if (result && result.STATUS) {
+				if (result.STATUS && result.STATUS.CODE == 0) {
+					callback();
+				} else {
+					callback(new Error(result.STATUS.MESSAGE));
+				}
+			} else {
+				callback(new Error(result.STATUS.MESSAGE));
+			}
+		}).catch(error => {
+			callback(new Error('Communication with Olleh TV failed.'));
+		});
 	},
 
 	identify: function (callback) {
