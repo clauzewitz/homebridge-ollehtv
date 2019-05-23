@@ -20,7 +20,7 @@ This is Olleh TV plugin for [Homebridge](https://github.com/nfarina/homebridge).
    npm install -g homebridge-ollehtv
    ```
 
-2. Record down the `id` and `token` values as we need it in our configuration file later.
+2. Record down the `deviceId` and `token` values as we need it in our configuration file later.
 
 3. Add these values to `config.json`.
 
@@ -29,7 +29,7 @@ This is Olleh TV plugin for [Homebridge](https://github.com/nfarina/homebridge).
         {
           "accessory": "OllehTV",
           "name": "Olleh TV",
-          "id": "ID_FROM_STEP_2",
+          "deviceId": "DEVICE_ID_FROM_STEP_2",
           "token": "TOKEN_FROM_STEP_2",
           "interval": 5000
         }

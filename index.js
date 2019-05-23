@@ -6,20 +6,6 @@ const API_URL = 'https://ollehtvplay.ktipmedia.co.kr/otp/v1';
 let Service;
 let Characteristic;
 let logger;
-let requestOptions = {
-	method: 'POST',
-	url: API_URL,
-	headers: {
-		'Accept-Language': 'ko-kr',
-		'User-Agent': '%EC%98%AC%EB%A0%88%20tv%play/3.0.2 CFNetwork/808.2.16 Darwin/16.3.0'
-	},
-	json: true,
-	body: {
-		DEVICE_ID: undefined,
-		SVC_ID: 'OTP',
-		SVC_PW: undefined
-	}
-};
 
 module.exports = function (homebridge) {
 	Service = homebridge.hap.Service;
@@ -29,7 +15,18 @@ module.exports = function (homebridge) {
 }
 
 function sender(uri, params) {
-	requestOptions.url = (API_URL + uri);
+	let requestOptions = {
+		method: 'POST',
+		url: PI_URL + uri,
+		headers: {
+			'Accept-Language': 'ko-kr',
+			'User-Agent': '%EC%98%AC%EB%A0%88%20tv%play/3.0.2 CFNetwork/808.2.16 Darwin/16.3.0'
+		},
+		json: true,
+		body: {
+			SVC_ID: 'OTP'
+		}
+	};
 	
 	if (params) {
 		Object.assign(requestOptions.body, params);
@@ -44,8 +41,8 @@ function OllehTV(log, config) {
 	this.services = [];
 	this.name = config.name || 'Olleh TV';
 	this.interval = config.interval || 5000;
-	requestOptions.body.DEVICE_ID = config.id;
-	requestOptions.body.SVC_PW = config.token;
+	this.deviceId = config.deviceId;
+	this.token = config.token;
 	this.operatingState = false;
 
 	// olleh tv remote controller buttons
@@ -93,11 +90,11 @@ function OllehTV(log, config) {
 		ON: 2
 	};
 
-	if (!requestOptions.body.DEVICE_ID) {
-		throw new Error('Your must provide id of the Olleh TV.');
+	if (!this.deviceId) {
+		throw new Error('Your must provide device id of the Olleh TV.');
 	}
 
-	if (!requestOptions.body.SVC_PW) {
+	if (!this.token) {
 		throw new Error('Your must provide token of the Olleh TV.');
 	}
 
@@ -140,10 +137,13 @@ OllehTV.prototype = {
 		const that = this;
 
 		sender('/rmt/inputButton', {
-			KEY_CD: that.buttonGroup.POWER
+			KEY_CD: that.buttonGroup.POWER,
+			DEVICE_ID: that.deviceId,
+			SVC_PW: that.token
 		}).then(result => {
 			if (result && result.STATUS) {
 				if (result.STATUS && result.STATUS.CODE == 0) {
+					that.operatingState = !that.operatingState;
 					callback();
 				} else {
 					callback(new Error(result.STATUS.MESSAGE));
@@ -159,7 +159,10 @@ OllehTV.prototype = {
 	updateState: function () {
 		const that = this;
 
-		sender('/rmt/getCurrentState').then(result => {
+		sender('/rmt/getCurrentState', {
+			DEVICE_ID: that.deviceId,
+			SVC_PW: that.token
+		}).then(result => {
 			if (result && result.STATUS) {
 				if (result.STATUS && result.STATUS.CODE == 0 && result.STATUS.DATA) {
 					/*

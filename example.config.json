@@ -10,7 +10,7 @@
 		{
 			"accessory": "OllehTV",
 			"name": "Olleh TV",
-			"id": "asjkl23424-zasdf2-sdf234-dsafaa",
+			"deviceId": "asjkl23424-zasdf2-sdf234-dsafaa",
 			"token": "asjkl234243asdfa",
 			"interval": 5000
 		}
