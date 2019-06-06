@@ -121,11 +121,7 @@ function OllehTV(log, config) {
 
 OllehTV.prototype = {
 	discover: function () {
-		const that = this;
-
-		setInterval(function () {
-			that.updateState.bind(this);
-		}, that.interval);
+		setInterval(this.updateState.bind(this), this.interval);
 	},
 
 	getPowerState: function (callback) {
