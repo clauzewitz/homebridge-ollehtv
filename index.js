@@ -17,10 +17,9 @@ module.exports = function (homebridge) {
 function sender(uri, params) {
 	let requestOptions = {
 		method: 'POST',
-		url: PI_URL + uri,
+		url: API_URL + uri,
 		headers: {
-			'Accept-Language': 'ko-kr',
-			'User-Agent': '%EC%98%AC%EB%A0%88%20tv%play/3.0.2 CFNetwork/808.2.16 Darwin/16.3.0'
+			'User-Agent': 'compatible;ServiceType/OTP;OSType/Android;DeviceModel/Nexus 6;OSVersion/5.1.1;AppName/OllehTvPlay;AppVersion/03.01.14'
 		},
 		json: true,
 		body: {
@@ -179,7 +178,7 @@ OllehTV.prototype = {
 
 					that.service
 						.getCharacteristic(Characteristic.ActiveIdentifier)
-						.updateValue(result.STATUS.DATA.PRGM_ID);
+						.updateValue(result.STATUS.DATA.CHNL_NO);
 
 					that.service
 						.getCharacteristic(Characteristic.ConfiguredName)
