@@ -84,9 +84,8 @@ function OllehTV(log, config) {
 	};
 
 	this.stateGroup = {
-		OFF: 0,
-		STANDBY: 1,
-		ON: 2
+		OFF: '1',
+		ON: '2'
 	};
 
 	if (!this.deviceId) {
@@ -110,7 +109,7 @@ function OllehTV(log, config) {
 
 	this.service
 		.getCharacteristic(Characteristic.Active)
-        .on('get', this.getPowerState.bind(this))
+		.on('get', this.getPowerState.bind(this))
 		.on('set', this.setPowerState.bind(this));
 
 	this.services.push(this.service);
@@ -137,7 +136,7 @@ OllehTV.prototype = {
 			SVC_PW: that.token
 		}).then(result => {
 			if (result && result.STATUS) {
-				if (result.STATUS && result.STATUS.CODE == 0) {
+				if (result.STATUS.CODE == '000') {
 					that.operatingState = !that.operatingState;
 					callback();
 				} else {
@@ -159,7 +158,7 @@ OllehTV.prototype = {
 			SVC_PW: that.token
 		}).then(result => {
 			if (result && result.STATUS) {
-				if (result.STATUS && result.STATUS.CODE == 0 && result.STATUS.DATA) {
+				if (result.STATUS.CODE == '000' && result.DATA) {
 					/*
 					* CHNL_NM: channel name
 					* CHNL_NO: channel number
@@ -170,23 +169,30 @@ OllehTV.prototype = {
 					* STB_STATE: state(0: OFF, 1: STANDBY, 2: ON)
 					*/
 
-					that.operatingState = (result.STATUS.DATA.STB_STATE != that.stateGroup.OFF);
+					let stbState = (result.DATA.STB_STATE != that.stateGroup.OFF);
+					
+					if (stbState != that.operatingState) {
+						that.operatingState = stbState;
+						that.service
+							.getCharacteristic(Characteristic.On)
+							.updateValue(that.operatingState);
+					}
 
 					that.service
 						.getCharacteristic(Characteristic.ActiveIdentifier)
-						.updateValue(result.STATUS.DATA.CHNL_NO);
+						.updateValue(result.DATA.CHNL_NO);
 
 					that.service
 						.getCharacteristic(Characteristic.ConfiguredName)
-						.updateValue(result.STATUS.DATA.PRGM_NM);
+						.updateValue(result.DATA.PRGM_NM);
 				} else {
-					callback(new Error(result.STATUS.MESSAGE));
+					//callback(new Error(result.STATUS.MESSAGE));
 				}
 			} else {
-				callback(new Error(result.STATUS.MESSAGE));
+				//callback(new Error(result.STATUS.MESSAGE));
 			}
 		}).catch(error => {
-			callback(new Error('Communication with Olleh TV failed.'));
+			//callback(new Error('Communication with Olleh TV failed.'));
 		});
 	},
 
