@@ -1,6 +1,6 @@
 {
 	"name": "homebridge-ollehtv",
-	"version": "1.0.2",
+	"version": "1.0.3",
 	"description": "Olleh TV plugin for Homebridge.",
 	"license": "MIT",
 	"keywords": [

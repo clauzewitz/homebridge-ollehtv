@@ -137,7 +137,7 @@ OllehTV.prototype = {
 		}).then(result => {
 			if (result && result.STATUS) {
 				if (result.STATUS.CODE == '000') {
-					that.operatingState = !that.operatingState;
+					that.operatingState = state;
 					callback();
 				} else {
 					callback(new Error(result.STATUS.MESSAGE));
@@ -166,7 +166,7 @@ OllehTV.prototype = {
 					* PRGM_NM: program name
 					* STRT_TM: start time
 					* FIN_TM: end time
-					* STB_STATE: state(0: OFF, 1: STANDBY, 2: ON)
+					* STB_STATE: state(1: OFF, 2: ON)
 					*/
 
 					let stbState = (result.DATA.STB_STATE != that.stateGroup.OFF);
@@ -174,7 +174,7 @@ OllehTV.prototype = {
 					if (stbState != that.operatingState) {
 						that.operatingState = stbState;
 						that.service
-							.getCharacteristic(Characteristic.On)
+							.getCharacteristic(Characteristic.Active)
 							.updateValue(that.operatingState);
 					}
 
@@ -186,13 +186,13 @@ OllehTV.prototype = {
 						.getCharacteristic(Characteristic.ConfiguredName)
 						.updateValue(result.DATA.PRGM_NM);
 				} else {
-					//callback(new Error(result.STATUS.MESSAGE));
+					logger.error(new Error(result.STATUS.MESSAGE));
 				}
 			} else {
-				//callback(new Error(result.STATUS.MESSAGE));
+				logger.error(new Error(result.STATUS.MESSAGE));
 			}
 		}).catch(error => {
-			//callback(new Error('Communication with Olleh TV failed.'));
+			logger.error(new Error('Communication with Olleh TV failed.'));
 		});
 	},
 
