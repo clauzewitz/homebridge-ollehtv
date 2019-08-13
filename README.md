@@ -1,19 +1,16 @@
 [![npm version](https://badge.fury.io/js/homebridge-ollehtv.svg)](https://badge.fury.io/js/homebridge-ollehtv)
 
 # homebridge-ollehtv
-
 This is Olleh TV plugin for [Homebridge](https://github.com/nfarina/homebridge). 
 
 
 
 ### Features
-
 * Switch on / off.
 
 
 
 ### Installation
-
 1. Install required packages.
 
    ```
@@ -40,6 +37,5 @@ This is Olleh TV plugin for [Homebridge](https://github.com/nfarina/homebridge).
 
 
 
-### License
-
-See the [LICENSE](https://github.com/clauzewitz/homebridge-ollehtv/blob/master/LICENSE.md) file for license rights and limitations (MIT).
+# License
+MIT License
